@@ -79,6 +79,7 @@ class AutoPainter:
 	running = False
 	finished = True
 	message = 'Idle'
+	brush_size_multiplier = 1.25
 	def __init__(self):
 		self.load_image('bobross_trees.jpg')
 		self.configuration = self.get_configuration('quick')
@@ -87,6 +88,8 @@ class AutoPainter:
 		for fn in brush_filenames:
 			brush = PIL.Image.open(fn).convert('RGBA')
 			self.base_brushes.append(brush)
+		self.canvas = PIL.Image.new('RGB', (512,512), (255,255,255))
+		self.canvas.save(self.progress_image, format='JPEG')
 
 	def load_image(self, filename):
 		self.reference_image = PIL.Image.open('input\\'+filename).convert('RGBA')
@@ -257,7 +260,7 @@ class AutoPainter:
 		ignore_under_brightness = percent[3]
 		width_step = int(math.ceil(self.reference_image.width * percent[0] / 100))
 		height_step = int(math.ceil(self.reference_image.height * percent[0] / 100))
-		size = int(max(width_step*2, (height_step*2)))
+		size = int(max(width_step*2*self.brush_size_multiplier, (height_step*2*self.brush_size_multiplier)))
 		brush_size = (size, size)
 		self.message = 'Iteration '+str(iteration+1)+' of '+str(len(percents))+' : '+str(percent[0])+'% : brush size '+str(brush_size)
 		print(self.message)
@@ -307,7 +310,7 @@ class AutoPainter:
 				for pixel in color_areas[str(color[1])]:
 					if not self.running:
 						return
-					rnd = (random.uniform(-width_step*0.5, width_step*0.5),  random.uniform(-height_step*0.5, height_step*0.5))
+					rnd = (random.uniform(-width_step*0.5*self.brush_size_multiplier, width_step*0.5*self.brush_size_multiplier),  random.uniform(-height_step*0.5*self.brush_size_multiplier, height_step*0.5*self.brush_size_multiplier))
 					
 					# compare brush color with average canvas color
 					rect = ((pixel+rnd)[0]-brush_size[0]*0.5, (pixel+rnd)[1]-brush_size[1]*0.5, (pixel+rnd)[0]+brush_size[0]*0.5, (pixel+rnd)[1]+brush_size[1]*0.5)
