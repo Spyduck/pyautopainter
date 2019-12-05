@@ -1,0 +1,42 @@
+<html>
+<head>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+<script src="/static/main.js"></script>
+</head>
+<body>
+Input image:
+<select id="image">
+	{% for name in image_names %}
+	<option value="{{name}}">{{name}}</option>
+	{% endfor %}
+</select>
+<br/>
+Configuration:
+<select id="configuration">
+	{% for name in config_names %}
+	<option value="{{name}}">{{name}}</option>
+	{% endfor %}
+</select>
+<br/>
+Palette:
+<select id="palette">
+	{% for name in palette_names %}
+	<option value="{{name}}">{{name}}</option>
+	{% endfor %}
+</select>
+<br/>
+color_distance_threshold: <input id="color_distance_threshold" value="20"></input>
+<br/>
+<button onclick="start()">Start</button>
+<button onclick="stop()">Stop</button>
+<br/>
+<span id="status"></span>
+<br/>
+
+<a href="/progress.jpg" target="_blank" id="progress_link"><img style="max-width: 768px; max-height: 512px" id="progress_image"/></a>
+
+</body>
+</html>
