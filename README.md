@@ -1,5 +1,5 @@
 # pyautopainter
-A Python script to paint an image on a blank canvas from a reference image using brushstrokes.
+A Python script to paint a copy of a reference image on a blank canvas using brushstrokes.
 
 ![example gif at 2x speed](https://github.com/Spyduck/pyautopainter/raw/master/examples/example.gif)
 
