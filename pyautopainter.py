@@ -27,9 +27,10 @@ class Palette:
 		return code
 
 	def load_from_image(self, filename):
-		image = PIL.Image.open(filename)
+		image = PIL.Image.open(filename).convert('RGB')
 		colors = image.getcolors(image.width*image.height)
 		self.palette = []
+		print('Loaded', len(colors), 'colors')
 		for color in colors:
 			self.palette.append((color[1][0], color[1][1], color[1][2]))
 		
@@ -73,7 +74,7 @@ class AutoPainter:
 	color_distance_threshold = 20
 	total_saved_index = 0
 	configuration = []
-	palette_names = ['(None)', 'greens/yellows', 'bob_ross', 'blues/purples/greens', 'inferno', 'mycarta cube1', 'purple/gray']
+	default_palette_names = ['(None)', 'greens/yellows', 'blues/purples/greens', 'inferno', 'mycarta cube1', 'purple/gray']
 	configuration_names = ['default', 'detail', 'quick', 'dark subject', 'light subject', 'dark subject (huge image)', 'light subject (huge image)']
 	progress_image = io.BytesIO()
 	running = False
@@ -98,10 +99,6 @@ class AutoPainter:
 	def setup_palette(self, palette_name):
 		if palette_name == 'greens/yellows':
 			return Palette(palettable.cartocolors.sequential.TealGrn_7.colors+palettable.cartocolors.sequential.agGrnYl_7.colors+palettable.cmocean.sequential.Algae_20.colors+palettable.cmocean.sequential.Turbid_20.colors)
-		elif palette_name == 'bob_ross':
-			palette = Palette()
-			palette.load_from_image('palette\\bob_ross.png')
-			return palette
 		elif palette_name == 'blues/purples/greens':
 			return Palette(palettable.cmocean.sequential.Dense_20.colors+palettable.cmocean.sequential.Deep_20.colors)
 		elif palette_name == 'inferno':
@@ -111,6 +108,11 @@ class AutoPainter:
 		elif palette_name == 'purple/gray':
 			return Palette(palettable.tableau.PurpleGray_12.colors)
 		else:
+			fn = os.path.join('palette', palette_name+'.png')
+			if os.path.exists(fn):
+				palette = Palette()
+				palette.load_from_image(fn)
+				return palette
 			return None
 	
 	def stop(self):
@@ -376,8 +378,8 @@ def start_painter():
 def landing_page():
 	name = request.args.get("name", "World")
 	config_names = painter.configuration_names
-	palette_names = painter.palette_names
 	image_names = [os.path.basename(x) for x in glob.glob('input\*.*')]
+	palette_names = painter.default_palette_names + [os.path.splitext(os.path.basename(x))[0] for x in glob.glob('palette\*.*')]
 	return render_template('main.html', config_names=config_names, palette_names=palette_names, image_names=image_names)
 
 @app.route('/status')
