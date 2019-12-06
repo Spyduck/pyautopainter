@@ -25,6 +25,6 @@ The ``color_distance_threshold`` setting is the distance between the color on th
 
 Put extra brushes in "brushes" -- they will load the next run or iteration. Brushes can be any size, but need some space at the edge of the image to be rotated correctly when running.
 
-Put extra palettes in "palettes" (note: these don't autoload yet).
+Put extra palettes as .png in "palette"
 
 The canvas will be saved to output/out.png when it finishes, or you can save the JPEG version from your browser.
