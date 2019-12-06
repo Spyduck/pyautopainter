@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, math, sys, imageio, palettable, numpy as np, math, random, glob, threading, io, time
+import os, math, sys, imageio, palettable, numpy as np, math, random, glob, threading, io, time, colorsys
 import PIL.Image, PIL.ImageDraw
 from flask import Flask, escape, request, send_file, render_template
 
@@ -26,6 +26,19 @@ class Palette:
 		code = tuple(colors_dict[closest_colors[0]])
 		return code
 
+	def retinted_color(self, color, palette=None):
+		nearest = self.nearest_color(color)
+		nearest_hsv = colorsys.rgb_to_hsv(nearest[0]/1.0, nearest[1]/1.0, nearest[2]/1.0)
+		color_hsv = colorsys.rgb_to_hsv(color[0]/1.0, color[1]/1.0, color[2]/1.0)
+		
+		hue = (1.0 + lerp(color_hsv[0], nearest_hsv[0], 0.75)) % 1.0
+		sat = max(0.0, min(1.0, lerp(color_hsv[1], nearest_hsv[1], 0.5)))
+		value = max(0.0, min(255.0,lerp(color_hsv[2], nearest_hsv[2], 0.3)))
+		
+		new = colorsys.hsv_to_rgb(hue, sat, int(value))
+		
+		return (int(new[0]), int(new[1]), int(new[2]))
+		
 	def load_from_image(self, filename):
 		image = PIL.Image.open(filename).convert('RGB')
 		colors = image.getcolors(image.width*image.height)
@@ -33,7 +46,10 @@ class Palette:
 		print('Loaded', len(colors), 'colors')
 		for color in colors:
 			self.palette.append((color[1][0], color[1][1], color[1][2]))
-		
+
+def lerp(v1, v2, d):
+	return v1 * (1 - d) + v2 * d
+
 def image_average_color(image):
 	colour_tuple = [None, None, None]
 	for channel in range(3):
@@ -81,6 +97,7 @@ class AutoPainter:
 	finished = True
 	message = 'Idle'
 	brush_size_multiplier = 1.25
+	palette_strict = False
 	def __init__(self):
 		self.load_image('bobross_trees.jpg')
 		self.configuration = self.get_configuration('quick')
@@ -264,7 +281,7 @@ class AutoPainter:
 		height_step = int(math.ceil(self.reference_image.height * percent[0] / 100))
 		size = int(max(width_step*2*self.brush_size_multiplier, (height_step*2*self.brush_size_multiplier)))
 		brush_size = (size, size)
-		self.message = 'Iteration '+str(iteration+1)+' of '+str(len(percents))+' : '+str(percent[0])+'% : brush size '+str(brush_size)
+		self.message = 'Iteration '+str(iteration+1)+' of '+str(len(percents))+' : brush size '+str(brush_size)
 		print(self.message)
 		pixelated_image = PIL.Image.new('RGB', self.reference_image.size, (0,0,0))
 		draw = PIL.ImageDraw.Draw(pixelated_image)
@@ -275,7 +292,10 @@ class AutoPainter:
 				y2 = min(self.reference_image.height, y1 + height_step)
 				avg_color = rect_average_color(self.reference_image, (x1,y1, x2,y2))
 				if palette:
-					color = palette.nearest_color(avg_color)
+					if self.palette_strict:
+						color = palette.nearest_color(avg_color)
+					else:
+						color = palette.retinted_color(avg_color)
 				else:
 					color = avg_color
 				
@@ -398,6 +418,7 @@ def route_start():
 	painter.palette = painter.setup_palette(request.values.get('palette'))
 	painter.configuration = painter.get_configuration(request.values.get('configuration'))
 	painter.color_distance_threshold = int(request.values.get('color_distance_threshold'))
+	painter.palette_strict = request.values.get('palette_usage') == 'Exact'
 	start_painter()
 	return ''
 

@@ -16,9 +16,10 @@ function start() {
 	var opt_image = $('#image').children("option:selected").val();
 	var opt_configuration = $('#configuration').children("option:selected").val();
 	var opt_palette = $('#palette').children("option:selected").val();
+	var opt_palette_usage = $('#palette_usage').children("option:selected").val();
 	var opt_threshold = $('#color_distance_threshold').val();
 	
-	$.get('/start', {'image':opt_image, 'configuration':opt_configuration, 'palette':opt_palette, 'color_distance_threshold':opt_threshold});
+	$.get('/start', {'image':opt_image, 'configuration':opt_configuration, 'palette':opt_palette, 'color_distance_threshold':opt_threshold, 'palette_usage':opt_palette_usage});
 	if (!refresh_interval) {
 		update_progress();
 	}
