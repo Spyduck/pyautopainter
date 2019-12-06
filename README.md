@@ -21,6 +21,8 @@ Put new images in the "input" directory and refresh the browser window to load t
 
 The ``color_distance_threshold`` setting is the distance between the color on the image and the color to paint a brush stroke at that spot. If lower, the brush stroke will be skipped. I recommend experimenting with this but 10-40 can get good results.
 
+![color_distance_threshold examples](https://github.com/Spyduck/pyautopainter/raw/master/examples/color_distance_threshold.jpg)
+
 Put extra brushes in "brushes" -- they will load the next run or iteration. Brushes can be any size, but need some space at the edge of the image to be rotated correctly when running.
 
 Put extra palettes in "palettes" (note: these don't autoload yet).
