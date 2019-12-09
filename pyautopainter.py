@@ -141,6 +141,7 @@ class AutoPainter:
 			return
 		self.running = True
 		self.finished = False
+		self.message = 'Starting'
 		self.canvas = PIL.Image.new('RGB', self.reference_image.size, (255,255,255))
 		self.progress_image = io.BytesIO()
 		self.canvas.save(self.progress_image, format='JPEG')
@@ -283,9 +284,8 @@ class AutoPainter:
 		brush_size = (size, size)
 		self.message = 'Iteration '+str(iteration+1)+' of '+str(len(percents))+' : brush size '+str(brush_size)
 		print(self.message)
-		pixelated_image = PIL.Image.new('RGB', self.reference_image.size, (0,0,0))
-		draw = PIL.ImageDraw.Draw(pixelated_image)
 		color_areas = {}
+		all_colors = []
 		for x1 in range(0, self.reference_image.width, width_step):
 			for y1 in range(0, self.reference_image.height, height_step):
 				x2 = min(self.reference_image.width, x1 + width_step)
@@ -299,23 +299,17 @@ class AutoPainter:
 				else:
 					color = avg_color
 				
-				draw.rectangle([x1,y1,x2,y2], fill=color)
-
 				key = str(color)
 				center = (int(x1+width_step*0.5),int(y1+height_step*0.5))
 				if key in color_areas:
 					color_areas[key].append(center)
 				else:
 					color_areas[key] = [center]
-		del draw
+					brightness = (color[0]+color[1]+color[2])/3
+					if ignore_over_brightness >= brightness / 255.0:
+						all_colors.append((brightness, color))
 		
-		all_colors = pixelated_image.getcolors(math.ceil(self.reference_image.width/width_step)*math.ceil(self.reference_image.height/height_step))
-		all_colors_2 = []
-		for color in all_colors:
-			brightness = (color[1][0]+color[1][1]+color[1][2])/3
-			if ignore_over_brightness >= brightness / 255.0:
-				all_colors_2.append((brightness, color[1]))
-		all_colors = sorted(all_colors_2, key=lambda x: x[0], reverse=True)
+		all_colors = sorted(all_colors, key=lambda x: x[0], reverse=True)
 		resized_brushes = []
 		for brush in self.base_brushes:
 			resized_brushes.append(brush.resize(brush_size, PIL.Image.NEAREST))
@@ -373,7 +367,6 @@ class AutoPainter:
 			self.height_canvas.paste(current_height_canvas, mask=current_height_canvas)
 			del height_canvas_mask
 			del current_height_canvas
-		del pixelated_image
 
 app = Flask(__name__)
 painter = None
