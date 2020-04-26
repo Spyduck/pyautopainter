@@ -18,8 +18,9 @@ function start() {
 	var opt_palette = $('#palette').children("option:selected").val();
 	var opt_palette_usage = $('#palette_usage').children("option:selected").val();
 	var opt_threshold = $('#color_distance_threshold').val();
+	var opt_autocontrast = $('#autocontrast').val();
 	
-	$.get('/start', {'image':opt_image, 'configuration':opt_configuration, 'palette':opt_palette, 'color_distance_threshold':opt_threshold, 'palette_usage':opt_palette_usage});
+	$.get('/start', {'image':opt_image, 'configuration':opt_configuration, 'palette':opt_palette, 'color_distance_threshold':opt_threshold, 'palette_usage':opt_palette_usage, 'autocontrast':opt_autocontrast});
 	if (!refresh_interval) {
 		update_progress();
 	}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, math, sys, imageio, palettable, numpy as np, math, random, glob, threading, io, time, colorsys
-import PIL.Image, PIL.ImageDraw
+import PIL.Image, PIL.ImageDraw, PIL.ImageOps
 from flask import Flask, escape, request, send_file, render_template
 
 
@@ -146,6 +146,8 @@ class AutoPainter:
 		self.progress_image = io.BytesIO()
 		self.canvas.save(self.progress_image, format='JPEG')
 		self.height_canvas = PIL.Image.new('RGB', self.reference_image.size, (0,0,0))
+		if self.autocontrast_cutoff:
+			painter.reference_image = PIL.ImageOps.autocontrast(painter.reference_image, cutoff=self.autocontrast_cutoff, ignore=None)
 		#if self.palette:
 		#	self.reference_image = self.recolor_image(self.reference_image, self.palette)
 		for iteration in range(0,len(self.configuration)):
@@ -412,6 +414,13 @@ def route_start():
 	painter.configuration = painter.get_configuration(request.values.get('configuration'))
 	painter.color_distance_threshold = int(request.values.get('color_distance_threshold'))
 	painter.palette_strict = request.values.get('palette_usage') == 'Exact'
+	painter.autocontrast_cutoff = None
+	if len(request.values.get('autocontrast','')) > 0:
+		try:
+			cutoff = int(request.values.get('autocontrast','0'))
+			painter.autocontrast_cutoff = cutoff
+		except Exception as e:
+			print(e)
 	start_painter()
 	return ''
 
