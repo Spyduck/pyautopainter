@@ -9,6 +9,11 @@ function update_progress() {
 				clearInterval(refresh_interval);
 				refresh_interval = null;
 			}
+			else if (data == 'Done') {
+        $('#status').html('<a href="progress.gif?'+new Date().getTime()+'" target="_blank">'+data+'</a>');
+				clearInterval(refresh_interval);
+				refresh_interval = null;
+			}
 		});
 	},2000);
 }

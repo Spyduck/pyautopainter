@@ -87,11 +87,14 @@ class AutoPainter:
 	height_canvas = None
 	generate_heightmap = False
 	save_incremental = False
+	save_gif = True
+	gif_frames = []
+	gif_size = 540
 	color_distance_threshold = 20
 	total_saved_index = 0
 	configuration = []
 	default_palette_names = ['(None)', 'greens/yellows', 'blues/purples/greens', 'inferno', 'mycarta cube1', 'purple/gray']
-	configuration_names = ['default', 'detail', 'quick', 'dark subject', 'light subject', 'dark subject (huge image)', 'light subject (huge image)']
+	configuration_names = ['default', 'detail', 'quick', 'Quick (darker subject)', 'Quick (lighter subject)', 'dark subject', 'light subject', 'dark subject (huge image)', 'light subject (huge image)']
 	progress_image = io.BytesIO()
 	running = False
 	finished = True
@@ -150,15 +153,23 @@ class AutoPainter:
 			painter.reference_image = PIL.ImageOps.autocontrast(painter.reference_image, cutoff=self.autocontrast_cutoff, ignore=None)
 		#if self.palette:
 		#	self.reference_image = self.recolor_image(self.reference_image, self.palette)
+		self.gif_frames = []
+		
 		for iteration in range(0,len(self.configuration)):
 			if self.running:
 				self.do_iteration(iteration, self.configuration, self.palette)
+					
 		self.canvas.save('output\\out.png')
+		if self.save_gif and len(self.gif_frames) > 1:
+			self.gif_frames[0].save('output\\out.gif', save_all=True, append_images=self.gif_frames[1:], optimize=False, duration=80, loop=0)
 		if self.generate_heightmap:
 			self.height_canvas.save('output\\out_height.png')
 		self.finished = True
+		if self.running:
+			self.message = 'Done'
+		else:
+			self.message = 'Idle'
 		self.running = False
-		self.message = 'Idle'
 		print(self.message)
 
 	def get_configuration(self, configuration_name):
@@ -185,11 +196,30 @@ class AutoPainter:
 			]
 		elif configuration_name == 'quick':
 			return [
-				(10, 1.0, 1, 0),
+				(20, 1.0, 1, 0),
 				(10, 0.95, 1, 0),
 				(4, 0.9, 1, 0),
 				(2, 0.85, 1, 0),
-				(0.5, 0.9, 0.6, 0)
+				(0.75, 0.9, 0.6, 0)
+			]
+		# [ (canvas_percent, alpha, ignore_lighter_than, ignore_darker_than) ]
+		elif configuration_name == 'Quick (darker subject)':
+			return [
+				(20, 1.0, 0.9, 0.2),
+				(10, 0.95, 0.8, 0.2),
+				(4, 0.9, 0.7, 0.3),
+				(2, 0.85, 0.6, 0.3),
+				(2, 0.7, 0.65, 0.5),
+				(0.75, 0.7, 0.25, 0)
+			]
+		elif configuration_name == 'Quick (lighter subject)':
+			return [
+				(20, 1.0, 1, 0.5),
+				(10, 0.95, 0.6, 0.1),
+				(4, 0.9, 0.7, 0.2),
+				(2, 0.85, 0.9, 0.3),
+				(2, 0.7, 0.5, 0.35),
+				(0.75, 0.7, 0.75, 0)
 			]
 		elif configuration_name == 'dark subject':
 			return [
@@ -308,7 +338,7 @@ class AutoPainter:
 				else:
 					color_areas[key] = [center]
 					brightness = (color[0]+color[1]+color[2])/3
-					if ignore_over_brightness >= brightness / 255.0:
+					if ignore_over_brightness >= brightness / 255.0 or ignore_under_brightness <= brightness / 255.0:
 						all_colors.append((brightness, color))
 		
 		all_colors = sorted(all_colors, key=lambda x: x[0], reverse=True)
@@ -353,11 +383,21 @@ class AutoPainter:
 					if self.generate_heightmap:
 						del new_height_brush_under
 						del new_height_brush_over
+			if self.save_gif:
+				if color_index >= last_saved_index + len(all_colors) * 0.33:
+					if self.save_gif:
+						last_saved_index = color_index
+						new_image = self.canvas.copy()
+						new_image.thumbnail([self.gif_size, self.gif_size], PIL.Image.LANCZOS)
+						# self.gif_size
+						self.gif_frames.append(new_image)
+			'''
 			if self.save_incremental:
 				if color_index >= last_saved_index + len(all_colors) * 0.33:
 					last_saved_index = color_index
 					self.canvas.save('output\\out_'+str(self.total_saved_index)+'.png')
 					self.total_saved_index += 1
+			'''
 			if time.time() > last_time + 1:
 				progress = io.BytesIO()
 				self.canvas.save(progress, format='JPEG')
@@ -429,6 +469,12 @@ def route_progress():
 	global painter
 	file = painter.progress_image.getvalue()
 	return send_file(io.BytesIO(file), attachment_filename='progress.jpg', mimetype='image/jpeg')
+
+@app.route('/progress.gif')
+def route_progress_gif():
+	global painter
+	file = painter.progress_image.getvalue()
+	return send_file('output\\out.gif', attachment_filename='progress.gif', mimetype='image/gif')
 
 if __name__ == '__main__':
 	painter = AutoPainter()
