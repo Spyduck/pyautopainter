@@ -1,5 +1,5 @@
 imageio==2.6.1
 numpy==1.17.4
 palettable==3.3.0
-Pillow==7.1.2
+Pillow==8.3.2
 Flask==1.1.1
